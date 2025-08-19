@@ -50,7 +50,10 @@ st.markdown("""
         h1 {
             text-align: center;
             font-family: Cambria, serif;
-            color: white;
+            font-size: 3rem;
+            color: black;
+            text-shadow: 2px 2px #f5deb3; /* light tan shadow for a popcorn feel */
+            letter-spacing: 2px;
         }
         .movie-card img {
             border-radius: 12px;
@@ -66,7 +69,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1>🎬 FIND SIMILAR MOVIES...</h1>", unsafe_allow_html=True)
+# Popcorn-themed title 🍿
+st.markdown("<h1>🍿 FIND SIMILAR MOVIES 🎬</h1>", unsafe_allow_html=True)
 
 _m = pd.read_csv('tmdb_5000_movies.csv')
 movies = _m[['id', 'title', 'overview']].copy()
