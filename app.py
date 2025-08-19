@@ -37,10 +37,8 @@ def recommend(movie):
         recommended_movie_names.append(movies.iloc[i[0]].title)
     return recommended_movie_names, recommended_movie_posters
 
-# ================== Streamlit UI ==================
 st.header('Movie Recommender System')
 
-# Build movies DataFrame from CSV (so .movie_id exists)
 _m = pd.read_csv('tmdb_5000_movies.csv')
 movies = _m[['id', 'title', 'overview']].copy()
 movies['overview'] = movies['overview'].fillna('')
