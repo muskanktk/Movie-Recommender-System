@@ -1,3 +1,14 @@
+
+
+from pathlib import Path
+
+
+ROOT = Path(__file__).parent
+with open(ROOT / "movie_list.pkl", "rb") as f:
+    movie_list = pickle.load(f)
+
+with open(ROOT / "similarity.pkl", "rb") as f:
+    similarity = pickle.load(f)
 import pickle
 import streamlit as st
 import requests
