@@ -7,7 +7,6 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
 
-# ================== Load Data ==================
 ROOT = Path(__file__).parent
 with open(ROOT / "movie_list.pkl", "rb") as f:
     movie_list = pickle.load(f)
@@ -15,7 +14,6 @@ with open(ROOT / "movie_list.pkl", "rb") as f:
 with open(ROOT / "similarity.pkl", "rb") as f:
     similarity = pickle.load(f)
 
-# ================== API Key from Secrets ==================
 TMDB_API_KEY = st.secrets.get("TMDB_API_KEY", "")
 
 def fetch_poster(movie_id):
@@ -27,9 +25,7 @@ def fetch_poster(movie_id):
     path = data.get("poster_path")
     return f"https://image.tmdb.org/t/p/w500/{path}" if path else None
 
-# ---- NEW: TMDB providers link (Option A) ----
 def tmdb_watch_link(movie_id, region="US"):
-    """Return TMDB's 'where to watch' page for a movie (region-specific) or None."""
     if not TMDB_API_KEY:
         return None
     url = f"https://api.themoviedb.org/3/movie/{movie_id}/watch/providers"
@@ -47,14 +43,13 @@ def recommend(movie):
         recommended_movie_names.append(movies.iloc[i[0]].title)
     return recommended_movie_names, recommended_movie_posters
 
-# ================== Styling ==================
 st.markdown("""
     <style>
-        body { background: linear-gradient(135deg, #6a11cb, #2575fc); }
-        .stApp { background: linear-gradient(135deg, #6a11cb, #2575fc); }
+        body { background-color: #5a0f0f; }
+        .stApp { background-color: #5a0f0f; }
         h1 {
             text-align: center;
-            font-family: 'Trebuchet MS', sans-serif;
+            font-family: Cambria, serif;
             color: white;
         }
         .movie-card img {
@@ -64,6 +59,7 @@ st.markdown("""
         .movie-title {
             text-align: center;
             font-weight: bold;
+            font-family: Cambria, serif;
             color: white;
             margin-bottom: 0.25rem;
         }
@@ -84,8 +80,6 @@ selected_movie = st.selectbox("Type or select a movie", movie_list)
 
 if st.button('Show Recommendation'):
     recommended_movie_names, recommended_movie_posters = recommend(selected_movie)
-
-    # Grid layout (3 per row)
     cols = st.columns(3)
     for idx, (name, poster) in enumerate(zip(recommended_movie_names, recommended_movie_posters)):
         with cols[idx % 3]:
@@ -94,7 +88,6 @@ if st.button('Show Recommendation'):
                 st.image(poster, use_container_width=True, caption="")
             else:
                 st.caption("Poster not available.")
-
             mid = int(title_to_id.get(name))
             link = tmdb_watch_link(mid)
             if link:
