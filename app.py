@@ -15,6 +15,7 @@ with open(ROOT / "movie_list.pkl", "rb") as f:
 with open(ROOT / "similarity.pkl", "rb") as f:
     similarity = pickle.load(f)
 
+# ================== API Key from Secrets ==================
 TMDB_API_KEY = st.secrets.get("TMDB_API_KEY", "")
 
 def fetch_poster(movie_id):
@@ -25,6 +26,15 @@ def fetch_poster(movie_id):
     data = requests.get(url, params=params, timeout=10).json()
     path = data.get("poster_path")
     return f"https://image.tmdb.org/t/p/w500/{path}" if path else None
+
+# ---- NEW: TMDB providers link (Option A) ----
+def tmdb_watch_link(movie_id, region="US"):
+    """Return TMDB's 'where to watch' page for a movie (region-specific) or None."""
+    if not TMDB_API_KEY:
+        return None
+    url = f"https://api.themoviedb.org/3/movie/{movie_id}/watch/providers"
+    data = requests.get(url, params={"api_key": TMDB_API_KEY}, timeout=10).json()
+    return data.get("results", {}).get(region, {}).get("link")
 
 def recommend(movie):
     index = movies[movies['title'] == movie].index[0]
@@ -40,12 +50,8 @@ def recommend(movie):
 # ================== Styling ==================
 st.markdown("""
     <style>
-        body {
-            background: linear-gradient(135deg, #6a11cb, #2575fc);
-        }
-        .stApp {
-            background: linear-gradient(135deg, #6a11cb, #2575fc);
-        }
+        body { background: linear-gradient(135deg, #6a11cb, #2575fc); }
+        .stApp { background: linear-gradient(135deg, #6a11cb, #2575fc); }
         h1 {
             text-align: center;
             font-family: 'Trebuchet MS', sans-serif;
@@ -59,6 +65,7 @@ st.markdown("""
             text-align: center;
             font-weight: bold;
             color: white;
+            margin-bottom: 0.25rem;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -71,15 +78,29 @@ movies = _m[['id', 'title', 'overview']].copy()
 movies['overview'] = movies['overview'].fillna('')
 movies['movie_id'] = movies['id']
 
+# quick lookup for title -> id
+title_to_id = dict(zip(movies['title'], movies['movie_id']))
+
 movie_list = movies['title'].values
 selected_movie = st.selectbox("Type or select a movie", movie_list)
 
 if st.button('Show Recommendation'):
     recommended_movie_names, recommended_movie_posters = recommend(selected_movie)
 
-    # Grid layout (2 rows, 3 per row max)
+    # Grid layout (3 per row)
     cols = st.columns(3)
     for idx, (name, poster) in enumerate(zip(recommended_movie_names, recommended_movie_posters)):
         with cols[idx % 3]:
             st.markdown(f"<p class='movie-title'>{name}</p>", unsafe_allow_html=True)
-            st.image(poster, use_container_width=True, caption="")  
+            if poster:
+                st.image(poster, use_container_width=True, caption="")
+            else:
+                st.caption("Poster not available.")
+
+            # Providers button (Option A)
+            mid = int(title_to_id.get(name))
+            link = tmdb_watch_link(mid)
+            if link:
+                st.link_button("Where to Watch (TMDB)", link)
+            else:
+                st.caption("Provider info not available.")
