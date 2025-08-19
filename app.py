@@ -70,15 +70,13 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ================== UI ==================
-st.markdown("<h1>🎬 MOVIE RECOMMENDATIONS</h1>", unsafe_allow_html=True)
+st.markdown("<h1>🎬 FIND SIMILAR MOVIES...</h1>", unsafe_allow_html=True)
 
 _m = pd.read_csv('tmdb_5000_movies.csv')
 movies = _m[['id', 'title', 'overview']].copy()
 movies['overview'] = movies['overview'].fillna('')
 movies['movie_id'] = movies['id']
 
-# quick lookup for title -> id
 title_to_id = dict(zip(movies['title'], movies['movie_id']))
 
 movie_list = movies['title'].values
@@ -97,7 +95,6 @@ if st.button('Show Recommendation'):
             else:
                 st.caption("Poster not available.")
 
-            # Providers button (Option A)
             mid = int(title_to_id.get(name))
             link = tmdb_watch_link(mid)
             if link:
