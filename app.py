@@ -64,7 +64,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ================== UI ==================
-st.markdown("<h1>🎬 Prime Video Watch List</h1>", unsafe_allow_html=True)
+st.markdown("<h1>🎬 MOVIE RECOMMENDATIONS</h1>", unsafe_allow_html=True)
 
 _m = pd.read_csv('tmdb_5000_movies.csv')
 movies = _m[['id', 'title', 'overview']].copy()
