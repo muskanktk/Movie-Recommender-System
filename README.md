@@ -3,7 +3,9 @@
 Discover movies similar to your favorites using **content-based recommendations** powered by **TF-IDF** and **cosine similarity**. Posters and streaming availability are fetched from **TMDB**.
 
 **Live demo:** 
+
 **Dataset:** [TMDB 5000 Movies (Kaggle)](https://www.kaggle.com/datasets/tmdb/tmdb-movie-metadata)
+
 **Browser:**  [https://your-streamlit-app-url.streamlit.app](#)
 
 ## 🚀 Features
