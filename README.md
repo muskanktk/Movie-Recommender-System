@@ -1,46 +1,53 @@
 # 🍿 Movie Recommender System
 
-Discover movies similar to your favorites using **content-based recommendations** powered by **TF-IDF** and **cosine similarity**. Posters and streaming availability are fetched from **TMDB**.
+Discover movies similar to your favorites using **content-based recommendations** powered by **TF-IDF** and **cosine similarity**. This application fetches movie posters and streaming availability from **TMDB**.
 
-**Live demo:** 
+> **Live Demo:**
 
-**Dataset:** [TMDB 5000 Movies (Kaggle)](https://www.kaggle.com/datasets/tmdb/tmdb-movie-metadata)
+> **Browser Link:** https://movie-recommender-system-g8tw8ng3nmffmeajxwjskv.streamlit.app/
 
-**Browser:**  [https://your-streamlit-app-url.streamlit.app](#)
+-----
 
-## 🚀 Features
+## 🚀 Key Features
 
-* **Content-Based Recommendations**: Suggests 5 similar movies based on plot overview.
-* **Movie Posters**: Dynamically pulled from TMDB API.
-* **Where to Watch**: Get provider links (region-aware, defaults to US).
-* **Streamlit UI**: Simple dropdown to search and select any movie.
-* **Precomputed Similarities**: Fast startup with prebuilt `movie_list.pkl` and `similarity.pkl`.
+  * **Content-Based Recommendations**: Generates 5 movie suggestions based on a selected movie's plot overview.
+  * **Movie Posters**: Displays dynamic posters fetched via the TMDB API.
+  * **Streaming Availability**: Provides "Where to Watch" links for movies.
+  * **Intuitive UI**: A simple Streamlit interface with a searchable dropdown menu.
+  * **Fast Performance**: Uses pre-computed similarity data for near-instant recommendations.
+
+-----
 
 ## 🛠️ Tech Stack
 
-* **Language:** Python
-* **Frameworks/Libraries:** `streamlit`, `pandas`, `scikit-learn`, `requests`
-* **Tools:** Git, VS Code
+  * **Language:** Python
+  * **Libraries:** `streamlit`, `pandas`, `scikit-learn`, `requests`
+
+-----
 
 ## 📦 Installation
 
-```bash
-# 1) Clone the repository
-git clone https://github.com/<your-username>/Movie-Recommender-System.git
-cd Movie-Recommender-System
+To run this project locally, follow these steps:
 
-# 2) Create & activate a virtual environment
-python -m venv venv
-# Mac/Linux
-source venv/bin/activate
-# Windows (PowerShell)
-venv\Scripts\Activate.ps1
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/<your-username>/Movie-Recommender-System.git
+    cd Movie-Recommender-System
+    ```
+2.  **Create and activate a virtual environment:**
+    ```bash
+    python -m venv venv
+    # Mac/Linux
+    source venv/bin/activate
+    # Windows
+    venv\Scripts\Activate.ps1
+    ```
+3.  **Install dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-# 3) Install dependencies
-pip install -r requirements.txt
-```
-
-**Sample `requirements.txt`:**
+### Sample `requirements.txt`
 
 ```
 streamlit
@@ -49,79 +56,85 @@ requests
 scikit-learn
 ```
 
+-----
+
 ## 🔑 Configuration
 
-Create a `.streamlit/secrets.toml` file:
+To display movie posters and streaming links, you need a TMDB API key.
 
-```toml
-TMDB_API_KEY = "your_tmdb_api_key"
-```
+1.  Sign up for a free account on [The Movie Database (TMDB)](https://www.themoviedb.org/).
+2.  Create a `.streamlit/secrets.toml` file in your project's root directory.
+3.  Add your API key to the file:
+    ```toml
+    TMDB_API_KEY = "your_tmdb_api_key"
+    ```
 
-Without the key, recommendations still work, but posters and provider links will be missing.
+*Note: The app will still function for recommendations without this key, but posters and links will not appear.*
 
----
+-----
 
 ## ▶ Run Locally
+
+After configuration, simply run the Streamlit application:
 
 ```bash
 streamlit run app.py
 ```
 
-Then open the local URL shown in your terminal.
+This will open the app in your web browser.
 
----
+-----
 
 ## 💡 How to Use
 
-1. **Select a Movie** from the dropdown search box.
-2. Click **Show Recommendation**.
-3. View:
+1.  Select a movie from the searchable dropdown menu.
+2.  Click the **Show Recommendation** button.
+3.  The app will display five recommended movies with their posters and "Where to Watch" links.
 
-   * 🎬 Recommended movie titles
-   * 🖼️ Posters from TMDB
-   * 🔗 “Where to Watch” links (if available)
+-----
 
 ## 📂 Project Structure
 
 ```
 Movie-Recommender-System/
-├─ app.py                 # Streamlit entry point
-├─ requirements.txt       # Python dependencies
-├─ README.md              # This file
-├─ movie_list.pkl         # Precomputed movie list
-├─ similarity.pkl         # Precomputed similarity matrix
-├─ tmdb_5000_movies.csv   # Movie dataset
-├─ tmdb_5000_credits.csv  # Credits dataset (optional)
-└─ JupNote.ipynb          # Notebook to rebuild artifacts
+├─ app.py                # Main Streamlit application
+├─ requirements.txt      # Project dependencies
+├─ README.md             # This file
+├─ .streamlit/           # API key configuration
+│  └─ secrets.toml
+├─ movie_list.pkl        # Pre-computed movie data
+├─ similarity.pkl        # Pre-computed cosine similarity matrix
+└─ data/
+   ├─ tmdb_5000_movies.csv
+   └─ tmdb_5000_credits.csv
 ```
+
+-----
+
 ## 🛣️ Roadmap
 
-* [ ] Add genre, cast, and crew features for richer recommendations
-* [ ] Hybrid model: combine popularity + similarity
-* [ ] Support multiple regions for watch-provider links
-* [ ] Add caching for API requests
+  * [ ] Incorporate genre, cast, and crew data for a richer recommendation model.
+  * [ ] Implement a hybrid recommendation model.
+  * [ ] Add multi-region support for "Where to Watch" links.
 
-## FAQ
+-----
 
-**Q: Can I run it without a TMDB key?**
-A: Yes, but posters and watch links won’t show.
+## 🙋 FAQ
 
-**Q: How are recommendations calculated?**
-A: By comparing movie plot overviews with **TF-IDF vectors** and **cosine similarity**.
+**Q: How does the recommendation engine work?**
+A: It uses **TF-IDF** to vectorize movie plot summaries and then calculates **cosine similarity** between them to find the most similar movies.
 
-**Q: Can I add more movies?**
-A: Yes! Rebuild `movie_list.pkl` and `similarity.pkl` using the notebook with your dataset.
+**Q: Can I use a different dataset?**
+A: Yes. You can use a different dataset and re-run the data processing script to generate new `.pkl` files.
 
-## Troubleshooting
+-----
 
-* **KeyError on recommend()** → Ensure `movies` DataFrame is built and the title exists.
-* **No posters/links** → Check your TMDB API key.
-* **Slow app startup** → Use the precomputed `.pkl` files instead of recalculating similarity.
+## 📄 License
 
-## License
+This project is licensed under the MIT License.
 
-MIT License – see [LICENSE](LICENSE) for details.
+-----
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
-* TMDB for the dataset and API
+  * **The Movie Database (TMDB)** for providing the movie data and API.
