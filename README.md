@@ -2,7 +2,8 @@
 
 Discover movies similar to your favorites using **content-based recommendations** powered by **TF-IDF** and **cosine similarity**. This application fetches movie posters and streaming availability from **TMDB**.
 
-> **Live Demo:**
+> **Live Demo:**![ezgif com-video-to-gif-converter (6)](https://github.com/user-attachments/assets/3997589c-43a4-4b36-82ba-819ae0ea1654)
+
 
 > **Browser Link:** https://movie-recommender-system-g8tw8ng3nmffmeajxwjskv.streamlit.app/
 
