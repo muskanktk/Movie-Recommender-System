@@ -1,100 +1,205 @@
-import pickle
+# app.py
+import time
+import functools
+import logging
 from pathlib import Path
-import streamlit as st
-import requests
-import pandas as pd
 
+import numpy as np
+import pandas as pd
+import requests
+import streamlit as st
+
+from requests.exceptions import RequestException
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
 
+# =========================
+# Page config + logging
+# =========================
+st.set_page_config(page_title="🍿 Movie Recommender", layout="wide")
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("recommender")
+
+# =========================
+# Agile flavor (versioning)
+# =========================
+st.sidebar.caption("Version: 0.3.0 (Sprint 6)")
+if st.sidebar.button("View Sprint Notes"):
+    st.sidebar.info(
+        "- Added retries & caching for TMDB\n"
+        "- Faster first render via cached TF-IDF\n"
+        "- Better error messages\n"
+        "- CI + tests + Docker"
+    )
+
+# =========================
+# Constants / Paths
+# =========================
 ROOT = Path(__file__).parent
-with open(ROOT / "movie_list.pkl", "rb") as f:
-    movie_list = pickle.load(f)
+DATA_CSV = ROOT / "tmdb_5000_movies.csv"
 
-with open(ROOT / "similarity.pkl", "rb") as f:
-    similarity = pickle.load(f)
-
+# =========================
+# Secrets / API Keys
+# =========================
 TMDB_API_KEY = st.secrets.get("TMDB_API_KEY", "")
 
-def fetch_poster(movie_id):
+# =========================
+# Resiliency helpers
+# =========================
+def retry(max_tries=3, backoff=0.6):
+    """Exponential backoff retry for transient network errors."""
+    def deco(fn):
+        @functools.wraps(fn)
+        def wrap(*a, **kw):
+            tries = 0
+            while True:
+                try:
+                    return fn(*a, **kw)
+                except RequestException as e:
+                    tries += 1
+                    if tries >= max_tries:
+                        logger.error(f"{fn.__name__} failed after {tries} tries: {e}")
+                        raise
+                    sleep = backoff * (2 ** (tries - 1))
+                    logger.warning(f"{fn.__name__} failed ({e}), retrying in {sleep:.1f}s…")
+                    time.sleep(sleep)
+        return wrap
+    return deco
+
+# =========================
+# Data loading + TF-IDF
+# =========================
+@st.cache_data(show_spinner=False)
+def load_movies() -> pd.DataFrame:
+    if not DATA_CSV.exists():
+        raise FileNotFoundError(
+            f"Required data file not found: {DATA_CSV.name}. "
+            "Place 'tmdb_5000_movies.csv' in the project root."
+        )
+    df = pd.read_csv(DATA_CSV)
+    # Keep only needed columns; ensure no NaNs
+    df = df[['id', 'title', 'overview']].copy()
+    df['overview'] = df['overview'].fillna('')
+    df['movie_id'] = df['id'].astype(int)
+    df['title'] = df['title'].astype(str)
+    return df
+
+@st.cache_data(show_spinner=False)
+def build_tfidf(df: pd.DataFrame):
+    """Compute TF-IDF and cosine similarity (cached)."""
+    tfidf = TfidfVectorizer(stop_words="english")
+    tfidf_matrix = tfidf.fit_transform(df['overview'])
+    # Linear kernel is faster than cosine_similarity(tfidf_matrix, tfidf_matrix)
+    sim = linear_kernel(tfidf_matrix, tfidf_matrix)
+    return tfidf, tfidf_matrix, sim
+
+# =========================
+# TMDB API (cached + retries)
+# =========================
+@st.cache_data(show_spinner=False, ttl=3600)
+@retry(max_tries=3, backoff=0.7)
+def tmdb_get_json(url, params):
+    resp = requests.get(url, params=params, timeout=10)
+    resp.raise_for_status()
+    return resp.json()
+
+def fetch_poster(movie_id: int):
     if not TMDB_API_KEY:
         return None
-    url = f"https://api.themoviedb.org/3/movie/{movie_id}"
-    params = {"api_key": TMDB_API_KEY, "language": "en-US"}
-    data = requests.get(url, params=params, timeout=10).json()
+    data = tmdb_get_json(
+        f"https://api.themoviedb.org/3/movie/{movie_id}",
+        {"api_key": TMDB_API_KEY, "language": "en-US"},
+    )
     path = data.get("poster_path")
     return f"https://image.tmdb.org/t/p/w500/{path}" if path else None
 
-def tmdb_watch_link(movie_id, region="US"):
+def tmdb_watch_link(movie_id: int, region="US"):
     if not TMDB_API_KEY:
         return None
-    url = f"https://api.themoviedb.org/3/movie/{movie_id}/watch/providers"
-    data = requests.get(url, params={"api_key": TMDB_API_KEY}, timeout=10).json()
+    data = tmdb_get_json(
+        f"https://api.themoviedb.org/3/movie/{movie_id}/watch/providers",
+        {"api_key": TMDB_API_KEY},
+    )
     return data.get("results", {}).get(region, {}).get("link")
 
-def recommend(movie):
-    index = movies[movies['title'] == movie].index[0]
-    distances = sorted(list(enumerate(similarity[index])), reverse=True, key=lambda x: x[1])
-    recommended_movie_names = []
-    recommended_movie_posters = []
-    for i in distances[1:6]:
-        movie_id = movies.iloc[i[0]].movie_id
-        recommended_movie_posters.append(fetch_poster(movie_id))
-        recommended_movie_names.append(movies.iloc[i[0]].title)
-    return recommended_movie_names, recommended_movie_posters
+# =========================
+# Recommendation core
+# =========================
+def recommend(df: pd.DataFrame, sim: np.ndarray, title: str, k: int = 5):
+    """Return top-k titles and poster URLs for a given movie title."""
+    if title not in set(df['title']):
+        raise KeyError(f"Movie '{title}' not found in dataset.")
+    idx = df.index[df['title'] == title][0]
+    scores = list(enumerate(sim[idx]))
+    # sort descending by similarity (skip self at index 0)
+    scores = sorted(scores, key=lambda x: x[1], reverse=True)[1:k+1]
 
+    names, posters, ids = [], [], []
+    for row_idx, _score in scores:
+        mid = int(df.iloc[row_idx].movie_id)
+        name = str(df.iloc[row_idx].title)
+        poster = fetch_poster(mid)  # may be None if no key
+        names.append(name)
+        posters.append(poster)
+        ids.append(mid)
+    return names, posters, ids
+
+# =========================
+# UI
+# =========================
 st.markdown("""
     <style>
-        body { background-color: #5a0f0f; }
-        .stApp { background-color: #5a0f0f; }
-        h1 {
-            text-align: center;
-            font-family: Cambria, serif;
-            font-size: 3rem;
-            color: black;
-            text-shadow: 2px 2px #f5deb3; /* light tan shadow for a popcorn feel */
-            letter-spacing: 2px;
-        }
-        .movie-card img {
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-        .movie-title {
-            text-align: center;
-            font-weight: bold;
-            font-family: Cambria, serif;
-            color: white;
-            margin-bottom: 0.25rem;
-        }
+        .stApp { background-color: #0f172a; } /* slate-900 */
+        h1, h2, h3, p, label, .movie-title { color: #e5e7eb; } /* slate-200 */
+        .subtle { color:#94a3b8; } /* slate-400 */
+        .movie-card img { border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .movie-title { text-align: center; font-weight: 700; margin-bottom: 0.25rem; }
     </style>
 """, unsafe_allow_html=True)
 
-# Popcorn-themed title 🍿
 st.markdown("<h1>🍿 FIND SIMILAR MOVIES 🎬</h1>", unsafe_allow_html=True)
+st.caption("Type a title from the TMDB 5000 dataset and get 5 similar films. Posters/links appear if a TMDB API key is configured.")
 
-_m = pd.read_csv('tmdb_5000_movies.csv')
-movies = _m[['id', 'title', 'overview']].copy()
-movies['overview'] = movies['overview'].fillna('')
-movies['movie_id'] = movies['id']
+# Diagnostics
+with st.expander("Diagnostics"):
+    st.write("TMDB key present:", "✅" if TMDB_API_KEY else "❌")
+    st.write("Data file:", DATA_CSV.name)
 
-title_to_id = dict(zip(movies['title'], movies['movie_id']))
+# Load data/model
+try:
+    movies = load_movies()
+    _tfidf, _tfidf_matrix, similarity = build_tfidf(movies)
+except Exception as e:
+    st.error(str(e))
+    st.stop()
 
-movie_list = movies['title'].values
-selected_movie = st.selectbox("Type or select a movie", movie_list)
+# Controls
+movie_list = movies['title'].tolist()
+selected = st.selectbox("Pick a movie title", options=movie_list, index=0, placeholder="Start typing…")
+go = st.button("Show Recommendations")
 
-if st.button('Show Recommendation'):
-    recommended_movie_names, recommended_movie_posters = recommend(selected_movie)
-    cols = st.columns(3)
-    for idx, (name, poster) in enumerate(zip(recommended_movie_names, recommended_movie_posters)):
-        with cols[idx % 3]:
+if go:
+    t0 = time.time()
+    try:
+        names, posters, ids = recommend(movies, similarity, selected, k=5)
+    except KeyError as e:
+        st.error(str(e))
+        st.stop()
+    except Exception as e:
+        st.error(f"Recommendation failed: {e}")
+        st.stop()
+
+    cols = st.columns(5)
+    for i, (name, poster, mid) in enumerate(zip(names, posters, ids)):
+        with cols[i]:
             st.markdown(f"<p class='movie-title'>{name}</p>", unsafe_allow_html=True)
             if poster:
-                st.image(poster, use_container_width=True, caption="")
+                st.image(poster, use_container_width=True)
             else:
                 st.caption("Poster not available.")
-            mid = int(title_to_id.get(name))
             link = tmdb_watch_link(mid)
             if link:
-                st.link_button("Where to Watch (TMDB)", link)
+                st.link_button("Where to Watch (TMDB)", link, use_container_width=True)
             else:
                 st.caption("Provider info not available.")
+    st.caption(f"Done in {time.time() - t0:.2f}s")
