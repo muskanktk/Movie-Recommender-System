@@ -34,10 +34,6 @@ DATA_CSV = ROOT / "tmdb_5000_movies.csv"
 # Secrets / API Keys
 # =========================
 TMDB_API_KEY = st.secrets.get("TMDB_API_KEY", "")
-if TMDB_API_KEY:
-    st.success("TMDB API key loaded!")
-else:
-    st.error("TMDB API key NOT loaded!")
 
 # =========================
 # Resiliency helpers
@@ -154,12 +150,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown("<h1>🍿 FIND SIMILAR MOVIES 🎬</h1>", unsafe_allow_html=True)
-st.caption("Type a title from the TMDB 5000 dataset and get 5 similar films. Posters/links appear if a TMDB API key is configured.")
 
-# Diagnostics
-with st.expander("Diagnostics"):
-    st.write("TMDB key present:", "✅" if TMDB_API_KEY else "❌")
-    st.write("Data file:", DATA_CSV.name)
 
 # Load data/model
 try:
@@ -171,7 +162,7 @@ except Exception as e:
 
 # Controls
 movie_list = movies['title'].tolist()
-selected = st.selectbox("Pick a movie title", options=movie_list, index=0, placeholder="Start typing…")
+selected = st.selectbox("Select Movie", options=movie_list, index=0, placeholder="Start typing…")
 go = st.button("Show Recommendations")
 
 if go:
@@ -198,4 +189,3 @@ if go:
                 st.link_button("Where to Watch (TMDB)", link, use_container_width=True)
             else:
                 st.caption("Provider info not available.")
-    st.caption(f"Done in {time.time() - t0:.2f}s")
