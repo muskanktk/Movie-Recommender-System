@@ -2,4 +2,4 @@
 __pycache__/
 .env
 .DS_Store
-.streamlit/config/toml
+.streamlit/secrets.toml
