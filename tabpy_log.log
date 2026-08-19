@@ -1,0 +1,22 @@
+2026-08-18,18:23:52 [INFO] (app.py:app:316): Parsing config file /Users/muska/Documents/Job/Movie-Recommender-System/venv/lib/python3.14/site-packages/tabpy/tabpy_server/app/../common/default.conf
+2026-08-18,18:23:52 [DEBUG] (app.py:app:277): Parameter port set to "9004" from default value
+2026-08-18,18:23:52 [DEBUG] (app.py:app:277): Parameter server_version set to "2.14.0" from default value
+2026-08-18,18:23:52 [DEBUG] (app.py:app:277): Parameter evaluate_enabled set to "True" from default value
+2026-08-18,18:23:52 [DEBUG] (app.py:app:277): Parameter evaluate_timeout set to "30" from default value
+2026-08-18,18:23:52 [DEBUG] (app.py:app:277): Parameter upload_dir set to "/Users/muska/Documents/Job/Movie-Recommender-System/venv/lib/python3.14/site-packages/tabpy/tmp/query_objects" from default value
+2026-08-18,18:23:52 [DEBUG] (app.py:app:277): Parameter transfer_protocol set to "http" from default value
+2026-08-18,18:23:52 [DEBUG] (app.py:app:284): Parameter certificate_file is not set
+2026-08-18,18:23:52 [DEBUG] (app.py:app:284): Parameter key_file is not set
+2026-08-18,18:23:52 [DEBUG] (app.py:app:277): Parameter minimum_tls_version set to "TLSv1_2" from default value
+2026-08-18,18:23:52 [DEBUG] (app.py:app:277): Parameter state_file_path set to "/Users/muska/Documents/Job/Movie-Recommender-System/venv/lib/python3.14/site-packages/tabpy/tabpy_server" from default value
+2026-08-18,18:23:52 [DEBUG] (app.py:app:277): Parameter static_path set to "/Users/muska/Documents/Job/Movie-Recommender-System/venv/lib/python3.14/site-packages/tabpy/tabpy_server/static" from default value
+2026-08-18,18:23:52 [DEBUG] (app.py:app:284): Parameter TABPY_PWD_FILE is not set
+2026-08-18,18:23:52 [DEBUG] (app.py:app:277): Parameter log_request_context set to "false" from default value
+2026-08-18,18:23:52 [DEBUG] (app.py:app:277): Parameter max_request_size_in_mb set to "100" from default value
+2026-08-18,18:23:52 [DEBUG] (app.py:app:277): Parameter gzip_enabled set to "True" from default value
+2026-08-18,18:23:52 [DEBUG] (app.py:app:277): Parameter arrow_enabled set to "False" from default value
+2026-08-18,18:23:52 [DEBUG] (app.py:app:277): Parameter arrowflight_port set to "13622" from default value
+2026-08-18,18:23:52 [INFO] (app.py:app:381): Setting max request size to 104857600 bytes
+2026-08-18,18:23:52 [DEBUG] (app.py:app:539): File /Users/muska/Documents/Job/Movie-Recommender-System/venv/lib/python3.14/site-packages/tabpy/tabpy_server/state.ini not found, creating from template /Users/muska/Documents/Job/Movie-Recommender-System/venv/lib/python3.14/site-packages/tabpy/tabpy_server/state.ini.template...
+2026-08-18,18:23:52 [INFO] (app.py:app:545): Loading state from state file /Users/muska/Documents/Job/Movie-Recommender-System/venv/lib/python3.14/site-packages/tabpy/tabpy_server/state.ini
+2026-08-18,18:23:52 [DEBUG] (app.py:app:397): Static pages folder set to "/Users/muska/Documents/Job/Movie-Recommender-System/venv/lib/python3.14/site-packages/tabpy/tabpy_server/static"
